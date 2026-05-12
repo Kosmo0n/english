@@ -25,6 +25,15 @@
                 <button class="nav-btn" onclick="goToPage('classes')">
                     <i class="fas fa-book-open"></i> Сыныптар
                 </button>
+                <button class="nav-btn" onclick="goToPage('listening')">
+                    <i class="fas fa-headphones"></i> Тыңдалым
+                </button>
+                <button class="nav-btn" onclick="goToPage('speaking')">
+                    <i class="fas fa-microphone"></i> Айтылым
+                </button>
+                <button class="nav-btn" onclick="goToPage('reading')">
+                    <i class="fas fa-book-reader"></i> Оқылым
+                </button>
                 <button class="nav-btn" onclick="goToPage('grammar')">
                     <i class="fas fa-spell-check"></i> Грамматика
                 </button>
@@ -44,6 +53,9 @@
     <div class="mobile-menu" id="mobileMenu">
         <button class="mobile-menu-btn" onclick="goToPage('home')">Басты бет</button>
         <button class="mobile-menu-btn" onclick="goToPage('classes')">Сыныптар</button>
+        <button class="mobile-menu-btn" onclick="goToPage('listening')">Тыңдалым</button>
+        <button class="mobile-menu-btn" onclick="goToPage('speaking')">Айтылым</button>
+        <button class="mobile-menu-btn" onclick="goToPage('reading')">Оқылым</button>
         <button class="mobile-menu-btn" onclick="goToPage('grammar')">Грамматика</button>
         <button class="mobile-menu-btn" onclick="goToPage('progress')">Прогресс</button>
     </div>
@@ -266,6 +278,49 @@
                 </div>
             </div>
         </section>
+
+        <!-- ЛИСТЕНИНГ (LISTENING) -->
+        <section id="listening-page" class="page">
+            <div class="page-header">
+                <h1>Listening / Тыңдалым</h1>
+                <p>Тыңдау дағдыларын дамытуға арналған диалогтар мен тапсырмалар</p>
+            </div>
+            <div class="listening-grid" id="listening-container"></div>
+            <div id="listening-detail" class="listening-detail" style="display: none;">
+                <button class="back-btn" onclick="closeListeningDetail()"><i class="fas fa-chevron-left"></i> Артқа</button>
+                <div class="listening-detail-content">
+                    <h2 id="listening-detail-title"></h2>
+                    <div id="listening-dialogue" class="listening-dialogue"></div>
+                    <div id="listening-tasks" class="listening-tasks"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- СПИКИНГ (SPEAKING) -->
+        <section id="speaking-page" class="page">
+            <div class="page-header">
+                <h1>Speaking / Айтылым</h1>
+                <p>Сөйлеу дағдыларын жақсартуға арналған тақырыптар мен жаттығулар</p>
+            </div>
+            <div class="speaking-grid" id="speaking-container"></div>
+        </section>
+
+        <!-- РИДИНГ (READING) -->
+        <section id="reading-page" class="page">
+            <div class="page-header">
+                <h1>Reading / Оқылым</h1>
+                <p>Мәтіндерді оқу және түсінуге арналған тапсырмалар</p>
+            </div>
+            <div class="reading-grid" id="reading-container"></div>
+            <div id="reading-detail" class="reading-detail" style="display: none;">
+                <button class="back-btn" onclick="closeReadingDetail()"><i class="fas fa-chevron-left"></i> Артқа</button>
+                <div class="reading-detail-content">
+                    <h2 id="reading-detail-title"></h2>
+                    <div id="reading-text" class="reading-text"></div>
+                    <div id="reading-quiz" class="reading-quiz"></div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Футер -->
@@ -287,6 +342,9 @@
     <script src="js/data/grammar.js"></script>
     <script src="js/data/quizzes.js"></script>
     <script src="js/data/lessons.js"></script>
+    <script src="js/data/listening.js"></script>
+    <script src="js/data/speaking.js"></script>
+    <script src="js/data/reading.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/quiz.js"></script>
     <script src="js/progress.js"></script>
