@@ -6,6 +6,12 @@ let currentPage = 'home';
 let currentClass = null;
 let currentTopic = null;
 
+// Аудио состояние
+let audioUtterances = [];
+let currentLineIdx = -1;
+let isDialoguePlaying = false;
+let synth = window.speechSynthesis;
+
 // Переключение между страницами
 function goToPage(pageId) {
     // Скрыть все страницы
@@ -26,35 +32,15 @@ function goToPage(pageId) {
     // Прокрутить до верха
     window.scrollTo(0, 0);
 
-    // Если переходим на страницу классов, отрендерить классы
-    if (pageId === 'classes') {
-        renderClasses();
-    }
+    // Остановка аудио при переходе на любую страницу
+    stopDialogueAudio();
 
-    // Если переходим на грамматику, отрендерить грамматику
-    if (pageId === 'grammar') {
-        renderGrammar();
-    }
-
-    // Если переходим на страницу прогресса, отрендерить прогресс
-    if (pageId === 'progress') {
-        renderProgress();
-    }
-
-    // Если переходим на листенинг
-    if (pageId === 'listening') {
-        renderListening();
-    }
-
-    // Если переходим на спикинг
-    if (pageId === 'speaking') {
-        renderSpeaking();
-    }
-
-    // Если переходим на ридинг
-    if (pageId === 'reading') {
-        renderReading();
-    }
+    if (pageId === 'classes') renderClasses();
+    if (pageId === 'grammar') renderGrammar();
+    if (pageId === 'progress') renderProgress();
+    if (pageId === 'listening') renderListening();
+    if (pageId === 'speaking') renderSpeaking();
+    if (pageId === 'reading') renderReading();
 }
 
 // Переход к темам класса
@@ -90,76 +76,44 @@ function goToTopics(classNum) {
     goToPage('topics');
 }
 
-// Переход к квизу
 function startQuiz(topicId, topicTitle) {
     currentTopic = topicId;
     const quiz = getQuizByTopicId(topicId);
-
     if (!quiz) {
         alert('Бұл тақырыпқа тест әлі қойылмаған.');
         return;
     }
-
     document.getElementById('quiz-title').textContent = `${topicTitle} - Тестілеу`;
     document.getElementById('totalQuestions').textContent = quiz.questions.length;
-
     goToPage('quiz');
     initializeQuiz(quiz);
 }
 
-// Переход к объяснению темы
 function goToQuiz(topicId, topicTitle) {
     const lesson = getLessonContent(topicId);
-    
     if (!lesson) {
         alert(`"${topicTitle}" тақырыбы бойынша материал әлі қосылмаған.`);
         return;
     }
-
     document.getElementById('lesson-title').textContent = lesson.title;
     document.getElementById('lesson-content').innerHTML = lesson.content;
-
     goToPage('lesson');
 }
 
-// Скрыть меню
 function closeMenu() {
     const mobileMenu = document.getElementById('mobileMenu');
     mobileMenu.classList.remove('active');
 }
 
-// Переключение мобильного меню
-document.addEventListener('DOMContentLoaded', function() {
-    const hamburger = document.getElementById('hamburger');
-    const mobileMenu = document.getElementById('mobileMenu');
+// Мобильное меню теперь инициализируется в main.js
 
-    if (hamburger) {
-        hamburger.addEventListener('click', function() {
-            mobileMenu.classList.toggle('active');
-        });
-    }
+function renderClasses() {}
 
-    // Закрыть меню при клике на пункт
-    document.querySelectorAll('.mobile-menu-btn').forEach(btn => {
-        btn.addEventListener('click', closeMenu);
-    });
-});
-
-// Отрендерить классы
-function renderClasses() {
-    // Функция рендерит классы (они уже в HTML, просто подготавливаем)
-}
-
-// Отрендерить грамматику
 function renderGrammar() {
     const grammarContainer = document.getElementById('grammar-container');
     const grammarDetail = document.getElementById('grammar-detail');
-
-    // Если уже рендерили, не повторяем
     if (grammarContainer.innerHTML) return;
-
     grammarContainer.innerHTML = '';
-
     GRAMMAR_TOPICS.forEach(grammar => {
         const grammarCard = document.createElement('div');
         grammarCard.className = 'grammar-card';
@@ -172,19 +126,15 @@ function renderGrammar() {
     });
 }
 
-// Показать деталь грамматики
 function showGrammarDetail(grammar) {
     const grammarContainer = document.getElementById('grammar-container');
     const grammarDetail = document.getElementById('grammar-detail');
     const detailTitle = document.getElementById('detail-title');
     const detailContent = document.getElementById('detail-content');
-
     grammarContainer.style.display = 'none';
     grammarDetail.style.display = 'block';
-
     detailTitle.textContent = grammar.title;
     detailContent.innerHTML = grammar.content;
-
     window.scrollTo(0, 0);
 }
 
@@ -195,12 +145,9 @@ function showGrammarDetail(grammar) {
 function renderListening() {
     const container = document.getElementById('listening-container');
     const detail = document.getElementById('listening-detail');
-    
     container.style.display = 'grid';
     detail.style.display = 'none';
-
     if (container.innerHTML) return;
-
     LISTENING_DATA.forEach(item => {
         const card = document.createElement('div');
         card.className = 'topic-card';
@@ -226,21 +173,26 @@ function showListeningDetail(id) {
     const dialogueBox = document.getElementById('listening-dialogue');
     const tasksBox = document.getElementById('listening-tasks');
 
+    stopDialogueAudio();
+
     container.style.display = 'none';
     detail.style.display = 'block';
     title.textContent = item.title;
 
     // Рендерим диалог
     dialogueBox.innerHTML = '<h3>Диалог</h3>';
-    item.dialogue.forEach(line => {
+    item.dialogue.forEach((line, index) => {
         const bubble = document.createElement('div');
         bubble.className = 'chat-bubble';
+        bubble.id = `line-${index}`;
         bubble.innerHTML = `
             <strong>${line.speaker}:</strong> ${line.text}
             <div class="bubble-kz">${line.textKz}</div>
         `;
         dialogueBox.appendChild(bubble);
     });
+
+    prepareAudio(item.dialogue);
 
     // Рендерим задачи
     tasksBox.innerHTML = '<h3>Тапсырмалар</h3>';
@@ -262,12 +214,107 @@ function showListeningDetail(id) {
     window.scrollTo(0, 0);
 }
 
+function prepareAudio(dialogue) {
+    audioUtterances = [];
+    currentLineIdx = -1;
+    dialogue.forEach((line, index) => {
+        const utterance = new SpeechSynthesisUtterance(line.text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.9;
+        const speakerHash = line.speaker.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+        utterance.pitch = 0.8 + (speakerHash % 5) * 0.1;
+        utterance.onstart = () => {
+            currentLineIdx = index;
+            updateAudioUI();
+            highlightLine(index);
+        };
+        utterance.onend = () => {
+            if (isDialoguePlaying && index < dialogue.length - 1) {
+                setTimeout(() => {
+                    if (isDialoguePlaying) synth.speak(audioUtterances[index + 1]);
+                }, 800);
+            } else if (index === dialogue.length - 1) {
+                stopDialogueAudio();
+            }
+        };
+        audioUtterances.push(utterance);
+    });
+    document.getElementById('player-progress-fill').style.width = '0%';
+    document.getElementById('current-time').textContent = '0:00';
+    document.getElementById('total-time').textContent = `0:${dialogue.length * 5}`;
+}
+
+function toggleDialogueAudio() {
+    if (isDialoguePlaying) pauseDialogueAudio();
+    else playDialogueAudio();
+}
+
+function playDialogueAudio() {
+    if (audioUtterances.length === 0) return;
+    isDialoguePlaying = true;
+    document.querySelector('.audio-player-container').classList.add('playing');
+    if (synth.paused) synth.resume();
+    else {
+        const startFrom = currentLineIdx < 0 ? 0 : currentLineIdx;
+        synth.speak(audioUtterances[startFrom]);
+    }
+    updateAudioUI();
+}
+
+function pauseDialogueAudio() {
+    isDialoguePlaying = false;
+    synth.pause();
+    updateAudioUI();
+    document.querySelector('.audio-player-container').classList.remove('playing');
+}
+
+function stopDialogueAudio() {
+    isDialoguePlaying = false;
+    synth.cancel();
+    currentLineIdx = -1;
+    updateAudioUI();
+    removeHighlights();
+    const playerContainer = document.querySelector('.audio-player-container');
+    if (playerContainer) playerContainer.classList.remove('playing');
+    const fill = document.getElementById('player-progress-fill');
+    if (fill) fill.style.width = '0%';
+}
+
+function updateAudioUI() {
+    const btn = document.getElementById('play-dialogue-btn');
+    const status = document.getElementById('player-status');
+    if (!btn || !status) return;
+    if (isDialoguePlaying) {
+        btn.innerHTML = '<i class="fas fa-pause"></i>';
+        status.textContent = 'Ойнатылуда... / Playing...';
+    } else {
+        btn.innerHTML = '<i class="fas fa-play"></i>';
+        status.textContent = currentLineIdx >= 0 ? 'Кідіртілді / Paused' : 'Дайын / Ready';
+    }
+    if (currentLineIdx >= 0) {
+        const progress = ((currentLineIdx + 1) / audioUtterances.length) * 100;
+        document.getElementById('player-progress-fill').style.width = `${progress}%`;
+        document.getElementById('current-time').textContent = `0:${(currentLineIdx + 1) * 5}`;
+    }
+}
+
+function highlightLine(index) {
+    removeHighlights();
+    const line = document.getElementById(`line-${index}`);
+    if (line) {
+        line.classList.add('speaking');
+        line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function removeHighlights() {
+    document.querySelectorAll('.chat-bubble').forEach(b => b.classList.remove('speaking'));
+}
+
 function checkListeningAnswer(btn, selected, correct) {
     const parent = btn.parentElement;
     const buttons = parent.querySelectorAll('.option-btn');
-    
     buttons.forEach(b => b.disabled = true);
-
     if (selected === correct) {
         btn.classList.add('correct');
         btn.innerHTML += ' ✓';
@@ -279,6 +326,7 @@ function checkListeningAnswer(btn, selected, correct) {
 }
 
 function closeListeningDetail() {
+    stopDialogueAudio();
     document.getElementById('listening-container').style.display = 'grid';
     document.getElementById('listening-detail').style.display = 'none';
 }
@@ -290,7 +338,6 @@ function closeListeningDetail() {
 function renderSpeaking() {
     const container = document.getElementById('speaking-container');
     if (container.innerHTML) return;
-
     SPEAKING_DATA.forEach(item => {
         const card = document.createElement('div');
         card.className = 'topic-card speaking-card';
@@ -324,12 +371,9 @@ function renderSpeaking() {
 function renderReading() {
     const container = document.getElementById('reading-container');
     const detail = document.getElementById('reading-detail');
-    
     container.style.display = 'grid';
     detail.style.display = 'none';
-
     if (container.innerHTML) return;
-
     READING_DATA.forEach(item => {
         const card = document.createElement('div');
         card.className = 'topic-card';
@@ -354,17 +398,14 @@ function showReadingDetail(id) {
     const title = document.getElementById('reading-detail-title');
     const textBox = document.getElementById('reading-text');
     const quizBox = document.getElementById('reading-quiz');
-
     container.style.display = 'none';
     detail.style.display = 'block';
     title.textContent = item.title;
-
     textBox.innerHTML = `
         <div class="reading-content-eng">${item.content}</div>
         <hr>
         <div class="reading-content-kz">${item.contentKz}</div>
     `;
-
     quizBox.innerHTML = '<h3>Тест</h3>';
     item.tasks.forEach((task, index) => {
         const taskDiv = document.createElement('div');
@@ -379,7 +420,6 @@ function showReadingDetail(id) {
         `;
         quizBox.appendChild(taskDiv);
     });
-
     window.scrollTo(0, 0);
 }
 
@@ -388,8 +428,6 @@ function closeReadingDetail() {
     document.getElementById('reading-detail').style.display = 'none';
 }
 
-// Инициализировать страницу при загрузке
 window.addEventListener('load', function() {
-    // Загрузить прогресс из localStorage
     loadProgress();
 });

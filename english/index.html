@@ -290,6 +290,35 @@
                 <button class="back-btn" onclick="closeListeningDetail()"><i class="fas fa-chevron-left"></i> Артқа</button>
                 <div class="listening-detail-content">
                     <h2 id="listening-detail-title"></h2>
+                    
+                    <div id="listening-audio-player" class="audio-player-container">
+                        <div class="player-main-controls">
+                            <button id="play-dialogue-btn" class="play-btn" onclick="toggleDialogueAudio()">
+                                <i class="fas fa-play"></i>
+                            </button>
+                            <div class="player-info">
+                                <h4>Диалогты тыңдау / Listen to Dialogue</h4>
+                                <p id="player-status">Дайын / Ready</p>
+                            </div>
+                            <div class="audio-visualizer" id="visualizer">
+                                <div class="vis-bar" style="animation-delay: 0.1s"></div>
+                                <div class="vis-bar" style="animation-delay: 0.2s"></div>
+                                <div class="vis-bar" style="animation-delay: 0.3s"></div>
+                                <div class="vis-bar" style="animation-delay: 0.4s"></div>
+                                <div class="vis-bar" style="animation-delay: 0.5s"></div>
+                            </div>
+                        </div>
+                        <div class="player-progress-container">
+                            <div class="player-progress-bar">
+                                <div id="player-progress-fill" class="player-progress-fill"></div>
+                            </div>
+                            <div class="player-time">
+                                <span id="current-time">0:00</span>
+                                <span id="total-time">0:00</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="listening-dialogue" class="listening-dialogue"></div>
                     <div id="listening-tasks" class="listening-tasks"></div>
                 </div>
